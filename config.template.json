@@ -1,0 +1,13 @@
+{
+  "mail" : "",
+  "authToken" : "",
+  "zoneID" : "",
+  "identifier" : "",
+  "dnsname" : "",
+  "dnstype" : "A",
+  "HASS" : {
+    "host" : "",
+    "device" : "",
+    "token" : ""
+  }
+}
