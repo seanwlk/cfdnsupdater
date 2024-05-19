@@ -2,9 +2,14 @@
   "mail" : "",
   "authToken" : "",
   "zoneID" : "",
-  "identifier" : "",
-  "dnsname" : "",
-  "dnstype" : "A",
+  "DNS" : [
+    {
+      "identifier" : "",
+      "dnsname" : "",
+      "dnstype" : "A",
+      "proxied" : true
+    }
+  ],
   "HASS" : {
     "host" : "",
     "device" : "",

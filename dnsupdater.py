@@ -12,9 +12,7 @@ class updater:
     self.mail = conf['mail']
     self.authToken = conf['authToken']
     self.zoneID = conf['zoneID']
-    self.identifier = conf['identifier']
-    self.recordName = conf['dnsname']
-    self.recordType = conf['dnstype']
+    self.dnsList = conf['DNS']
     self.hass = conf['HASS']
   def sendHASSnotification(self, title, message):
     headers = {
@@ -43,18 +41,18 @@ class updater:
       'Authorization' : f"Bearer {self.authToken}",
       'Content-Type' : 'application/json'
     }
-    data = {
-      'type' : self.recordType,
-      'name' : self.recordName,
-      'content' : ip,
-      'ttl' : 1,
-      'proxied' : True
-    }
-    req = requests.put(f"https://api.cloudflare.com/client/v4/zones/{self.zoneID}/dns_records/{self.identifier}",headers=headers,data=json.dumps(data)).json()
-    if "success" in req:
-      return True
-    logger.error(f"Cannot update IP on cloudflare: {req['error']}")
-    return False
+    for dns in self.dnsList:
+      data = {
+        'type' : dns['dnstype'],
+        'name' : dns['dnsname'],
+        'content' : ip,
+        'ttl' : 1,
+        'proxied' : dns['proxied']
+      }
+      req = requests.put(f"https://api.cloudflare.com/client/v4/zones/{self.zoneID}/dns_records/{dns['identifier']}",headers=headers,data=json.dumps(data)).json()
+      if not req['success']:
+        logger.error(f"Cannot update IP on cloudflare for dns {dns['name']}: {req['error']}")
+    return True
   def saveIPtoFile(self,ip):
     with open('current_ip','w') as f:
       f.write(ip)
