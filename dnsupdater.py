@@ -54,8 +54,12 @@ class updater:
       f.write(ip)
     return None
   def readIPfromFile(self):
-    with open('current_ip') as f:
-      c = f.read()
+    try:
+      with open('current_ip','r') as f:
+        c = f.read()
+    except:
+      with open('current_ip', 'w') as file:
+        c = 'NO_IP'
     return str(c)
 
 
