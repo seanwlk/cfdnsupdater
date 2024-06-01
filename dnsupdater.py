@@ -19,7 +19,10 @@ class updater:
       "Authorization": f"Bearer {self.hass['token']}",
       "Content-Type": "application/json"
     }
-    req = requests.post(f"http://{self.hass['host']}:8123/api/services/notify/{self.hass['device']}", headers=headers, json={"title": title, "message":message})
+    try:
+      req = requests.post(f"http://{self.hass['host']}:8123/api/services/notify/{self.hass['device']}", headers=headers, json={"title": title, "message":message})
+    except:
+      logger.error("Cannot sent HASS notification to your device")
     return None
   def getIP(self):
     try:
