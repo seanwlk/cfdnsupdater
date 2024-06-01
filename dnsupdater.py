@@ -3,6 +3,7 @@ import argparse
 import requests
 import json
 import sys
+from requests.auth import HTTPDigestAuth
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
@@ -14,7 +15,10 @@ class updater:
     self.zoneID = conf['zoneID']
     self.dnsList = conf['DNS']
     self.hass = conf['HASS']
+    self.atlasMongo = conf['AtlasMongo']
   def sendHASSnotification(self, title, message):
+    if not self.hass['host']:
+      return None
     headers = {
       "Authorization": f"Bearer {self.hass['token']}",
       "Content-Type": "application/json"
@@ -56,6 +60,37 @@ class updater:
       if not req['success']:
         logger.error(f"Cannot update IP on cloudflare for dns {dns['name']}: {req['error']}")
     return True
+  def updateAtlasMongoIP(self, newIP, oldIP):
+    if not self.atlasMongo['projectId']:
+      return None
+    h = {
+      "Accept": "application/vnd.atlas.2024-05-30+json"
+    }
+    accessList = requests.get(f"https://cloud.mongodb.com/api/atlas/v2/groups/{self.atlasMongo['projectId']}/accessList",
+                              auth=HTTPDigestAuth(self.atlasMongo['publicKey'], self.atlasMongo['privateKey']),
+                              headers = h).json()
+    entryId = None
+    ipAlreadyExists = False
+    for entry in accessList['results']:
+      if entry['ipAddress'] == oldIP:
+        entryId = entry['groupId']
+      elif entry['ipAddress'] == newIP:
+        ipAlreadyExists = True
+        logger.debug("New ip already registered in Atlas Access List")
+    if entryId:
+      requests.delete(f"https://cloud.mongodb.com/api/atlas/v2/groups/{entryId}/accessList/{oldIP}", 
+                      auth=HTTPDigestAuth(self.atlasMongo['publicKey'], self.atlasMongo['privateKey']),
+                      headers = h)
+    if not ipAlreadyExists:
+      newEntry = {
+        "ipAddress": newIP,
+        "comment": self.atlasMongo['entryComment']
+      }
+      requests.post(f"https://cloud.mongodb.com/api/atlas/v2/groups/{self.atlasMongo['projectId']}/accessList",
+                    auth=HTTPDigestAuth(self.atlasMongo['publicKey'], self.atlasMongo['privateKey']),
+                    headers = h, 
+                    json=[newEntry])
+    return None
   def saveIPtoFile(self,ip):
     with open('current_ip','w') as f:
       f.write(ip)
@@ -80,6 +115,7 @@ def runDNSUpdate(m):
     logger.info(f"IP changed from {current_ip} to {ip}")
     m.sendHASSnotification("Home IP Changed", f"{current_ip} to {ip}")
     cf = m.updateCFIP(ip)
+    m.updateAtlasMongoIP(ip,current_ip)
     if cf:
       m.saveIPtoFile(ip)
   else:

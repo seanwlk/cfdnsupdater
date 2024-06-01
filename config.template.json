@@ -14,5 +14,11 @@
     "host" : "",
     "device" : "",
     "token" : ""
+  },
+  "AtlasMongo" : {
+    "projectId" : "",
+    "publicKey" : "",
+    "privateKey" : "",
+    "entryComment" : "Home Dynamic IP"
   }
 }
