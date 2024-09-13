@@ -1,3 +1,4 @@
+import os
 import logging
 import argparse
 import requests
@@ -5,8 +6,10 @@ import json
 import sys
 from requests.auth import HTTPDigestAuth
 
+log_level = getattr(logging, os.getenv("LOGLEVEL", "INFO"), logging.INFO)
+
 logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=log_level, datefmt='%Y-%m-%d %H:%M:%S')
 
 class updater:
   def __init__(self,conf):
