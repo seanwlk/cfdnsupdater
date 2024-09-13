@@ -95,15 +95,15 @@ class updater:
                     json=[newEntry])
     return None
   def saveIPtoFile(self,ip):
-    with open('current_ip','w') as f:
+    with open(os.path.join(os.path.dirname(__file__),'current_ip'),'w') as f:
       f.write(ip)
     return None
   def readIPfromFile(self):
     try:
-      with open('current_ip','r') as f:
+      with open(os.path.join(os.path.dirname(__file__),'current_ip'),'r') as f:
         c = f.read()
     except:
-      with open('current_ip', 'w') as file:
+      with open(os.path.join(os.path.dirname(__file__),'current_ip'), 'w') as file:
         c = 'NO_IP'
     return str(c)
 
@@ -129,7 +129,7 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="CloudFlare DNS Updater")
   parser.add_argument('--ldns', action='store_true', help='List account DNS and identifiers')
   args = parser.parse_args()
-  mgr = updater(json.load(open('config.json')))
+  mgr = updater(json.load(open(os.path.join(os.path.dirname(__file__),'config.json'))))
   if args.ldns:
     data = mgr.listCFIdentifiersByZoneID(mgr.zoneID)
     if not data['success']:
