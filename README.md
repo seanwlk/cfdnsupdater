@@ -7,3 +7,16 @@ Optional
 
 ### Docker
 You can run it as a docker container by building it and mounting your `config.json` file to `/app/config.json`
+
+Build
+```bash
+docker build -t dnsupdater:latest .
+```
+
+Run
+```bash
+docker run --name DNSUpdater -it dnsupdater:latest \
+  -e CRONG_FREQUENCY='*/30 * * * *' \
+  -e LOGLEVEL='INFO' \
+  -v /my/path/to/config.json:/app/config.json
+```
