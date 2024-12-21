@@ -16,7 +16,7 @@ docker build -t dnsupdater:latest .
 Run
 ```bash
 docker run --name DNSUpdater -it dnsupdater:latest \
-  -e CRONG_FREQUENCY='*/30 * * * *' \
+  -e CRON_FREQUENCY='*/30 * * * *' \
   -e LOGLEVEL='INFO' \
   -v /my/path/to/config.json:/app/config.json
 ```
