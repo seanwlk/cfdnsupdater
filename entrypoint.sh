@@ -8,4 +8,4 @@ echo "Running initial DNS update..."
 python /app/dnsupdater.py > /proc/1/fd/1 2>&1 &
 
 echo "Starting cron daemon with schedule: $CRON_SCHEDULE"
-exec crond -f -l 8
+crond -f -l 8
