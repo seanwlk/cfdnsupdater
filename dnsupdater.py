@@ -11,10 +11,15 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 log_level = getattr(logging, os.getenv("LOGLEVEL", "INFO"), logging.INFO)
+log_file = Path(__file__).parent / "dnsupdater.log"
 
+logging.basicConfig(
+  level=log_level, 
+  handlers=[logging.FileHandler(log_file, encoding='utf-8')], 
+  format='%(asctime)s %(levelname)-8s %(message)s', 
+  datefmt='%Y-%m-%d %H:%M:%S'
+)
 logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=log_level, datefmt='%Y-%m-%d %H:%M:%S')
-
 
 def retry_with_backoff(max_retries=5, initial_backoff=5):
   """
@@ -71,7 +76,7 @@ class Updater:
       "Content-Type": "application/json"
     }
     url = f"http://{self.hass['host']}:8123/api/services/notify/{self.hass['device']}"
-    logger.info(f"Sending HASS notification to {self.hass['host']}")
+    logger.info(f"Sending HASS notification to device {self.hass['device']} at {self.hass['host']}")
     
     response = self.session.post(
       url, 
