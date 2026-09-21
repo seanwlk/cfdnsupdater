@@ -1,0 +1,10 @@
+services:
+  dnsupdater:
+    build: https://github.com/seanwlk/cfdnsupdater.git#main
+    container_name: DNSUpdater
+    environment:
+      - CRON_FREQUENCY=*/30 * * * *
+      - LOGLEVEL=INFO
+    volumes:
+      - ./config.json:/app/config.json
+    restart: unless-stopped
