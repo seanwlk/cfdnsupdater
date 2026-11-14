@@ -3,6 +3,7 @@ import logging
 import argparse
 import requests
 import json
+import html
 import sys
 import time
 from pathlib import Path
@@ -51,6 +52,7 @@ class Updater:
     self.zoneID = conf.get('zoneID', '')
     self.dnsList = conf.get('DNS', [])
     self.hass = conf.get('HASS', {})
+    self.telegram = conf.get('Telegram', {})
     self.atlasMongo = conf.get('AtlasMongo', {})
     self.ip_file = Path(__file__).parent / 'current_ip'
 
@@ -68,7 +70,7 @@ class Updater:
 
   @retry_with_backoff(max_retries=6, initial_backoff=15)
   def send_hass_notification(self, title, message):
-    if not self.hass.get('host'):
+    if not self.hass.get('enabled', bool(self.hass.get('host'))) or not self.hass.get('host'):
       return False
       
     headers = {
@@ -86,6 +88,33 @@ class Updater:
     )
     response.raise_for_status()
     logger.info("HASS notification sent successfully.")
+    return True
+
+  @retry_with_backoff(max_retries=5, initial_backoff=5)
+  def send_telegram_notification(self, title, message):
+    bot_token = self.telegram.get('botToken')
+    chat_id = self.telegram.get('chatId')
+    if not self.telegram.get('enabled', True) or not bot_token or not chat_id:
+      return False
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    text = (
+      f"<b>🌐 DNSUpdater 🌐</b>\n\n"
+      f"<b>{html.escape(title)}</b>\n"
+      f"<blockquote>{html.escape(message)}</blockquote>"
+    )
+    response = self.session.post(
+      url,
+      json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
+      timeout=self.timeout
+    )
+    response.raise_for_status()
+    result = response.json()
+    if not result.get('ok'):
+      logger.error(f"Telegram notification failed: {result.get('description', 'unknown API error')}")
+      return False
+
+    logger.info("Telegram notification sent successfully.")
     return True
 
   @retry_with_backoff(max_retries=5, initial_backoff=5)
@@ -210,6 +239,7 @@ def run_dns_update(mgr):
     cf_success = mgr.update_cf_ip(ip)
     mgr.update_atlas_mongo_ip(ip, current_ip)
     mgr.send_hass_notification("Home IP Changed", f"{current_ip} to {ip}")
+    mgr.send_telegram_notification("Home IP Changed", f"{current_ip} to {ip}")
     
     if cf_success:
       mgr.save_ip_to_file(ip)

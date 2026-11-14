@@ -11,9 +11,15 @@
     }
   ],
   "HASS" : {
+    "enabled" : false,
     "host" : "",
     "device" : "",
     "token" : ""
+  },
+  "Telegram" : {
+    "enabled" : false,
+    "botToken" : "",
+    "chatId" : ""
   },
   "AtlasMongo" : {
     "projectId" : "",
